@@ -1,0 +1,11 @@
+tensorflow
+overpy
+pandas
+numpy
+fastapi[standard]
+starlette
+scikit-learn
+uvicorn
+google-generativeai
+pillow
+matplotlib
