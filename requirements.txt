@@ -9,3 +9,5 @@ uvicorn
 google-generativeai
 pillow
 matplotlib
+serial
+xgboost

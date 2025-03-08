@@ -191,7 +191,7 @@ def extract_features(signal_data, fs):
 fs = 100 
 
 
-def get_signal(values):
+def get_features(values):
     if len(values) > 0:
         normal_features = extract_features(values, fs)
         print("\nNormal Pipe Signal Features:", normal_features)

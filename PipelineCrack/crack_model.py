@@ -2,8 +2,10 @@ import numpy as np
 
 def run_model(xgb_model, scaler, signal):
     # Convert to NumPy array
-    new_data = np.array([list(signal.values())])
-
+    #print(signal)
+    print(len(list(signal.values())))
+    new_data = np.array(signal)
+    
     # Print to verify
     print(new_data)
 
