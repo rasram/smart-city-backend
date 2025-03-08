@@ -14,46 +14,48 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
 
 # Initialize serial connection (replace with your Arduino's port)
-ser = serial.Serial('COM10', 9600, timeout=1)
+
+
+def collect_signal():
+    ser = serial.Serial('COM10', 9600, timeout=1)
 
 # Allow time for Arduino reset
-time.sleep(2)
+    time.sleep(2)
 
-time_list = []
-values = []
-
+    time_list = []
+    values = []
 # Open a CSV file for writing
-with open("distance_data.csv", mode="w", newline="") as f:
-    writer = csv.writer(f)
-    writer.writerow(["Time (s)", "Distance (cm)"])  # CSV Header
+    with open("distance_data.csv", mode="w", newline="") as f:
+        writer = csv.writer(f)
+        writer.writerow(["Time (s)", "Distance (cm)"])  # CSV Header
 
-    print("Logging distance for 10 seconds...")
-    start_time = time.time()
-    log_duration = 10  # seconds
+        print("Logging distance for 10 seconds...")
+        start_time = time.time()
+        log_duration = 10  # seconds
 
-    while True:
-        current_time = time.time() - start_time
-        if current_time > log_duration:
-            break
-        
-        if ser.in_waiting > 0:
-            line = ser.readline().decode('utf-8').strip()
-            try:
-                dist_value = float(line)  # Convert to float
-                time_list.append(current_time)
-                time_list.append(current_time + 0.01)
-                values.append(2000 - dist_value)
-                values.append(0)
-                
-                # Write data to CSV
-                writer.writerow([round(current_time, 2), 2000 - dist_value])
-                print(f"Time: {round(current_time, 2)}s | Distance: {dist_value} cm")
+        while True:
+            current_time = time.time() - start_time
+            if current_time > log_duration:
+                break
             
-            except ValueError:
-                print("Invalid data received, skipping...")
-
-print("Done logging. CSV file saved as distance_data.csv")
-ser.close()
+            if ser.in_waiting > 0:
+                line = ser.readline().decode('utf-8').strip()
+                try:
+                    dist_value = float(line)  # Convert to float
+                    time_list.append(current_time)
+                    time_list.append(current_time + 0.01)
+                    values.append(2000 - dist_value)
+                    values.append(0)
+                    
+                    # Write data to CSV
+                    writer.writerow([round(current_time, 2), 2000 - dist_value])
+                    print(f"Time: {round(current_time, 2)}s | Distance: {dist_value} cm")
+                
+                except ValueError:
+                    print("Invalid data received, skipping...")
+    print("Done logging. CSV file saved as distance_data.csv")
+    ser.close()
+    return values,time_list
 
 def crack_growth_with_factors(t, a, C0=1e-10, m=3.0, sigma=200, T=298, H2S=0, C_threshold=1e-4, alpha=0.5, beta=2, mu=0.5, pi=np.pi):
     C_T = C0 * np.exp(-mu / (8.314 * T))
@@ -181,9 +183,19 @@ def extract_features(signal_data, fs):
 
 fs = 100 
 
+<<<<<<< HEAD:PipelineCrack/signal.py
 
 if len(values) > 0:
     normal_features = extract_features(values, fs)
     print("\nNormal Pipe Signal Features:", normal_features)
 else:
     print("No valid signal data collected for feature extraction.")
+=======
+def get_signal(values):
+    if len(values) > 0:
+        normal_features = extract_features(values, fs)
+        print("\nNormal Pipe Signal Features:", normal_features)
+        return normal_features
+    else:
+        print("No valid signal data collected for feature extraction.")
+>>>>>>> 7fc2b6b32a263724711186bca0cfc1f40aa3e372:PipelineCrack/signal1.py
