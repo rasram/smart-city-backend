@@ -1,3 +1,7 @@
+from signal1 import *
+
+
+
 def get_signal():
   return 0
 
