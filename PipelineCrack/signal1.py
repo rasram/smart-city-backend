@@ -183,14 +183,7 @@ def extract_features(signal_data, fs):
 
 fs = 100 
 
-<<<<<<< HEAD:PipelineCrack/signal.py
 
-if len(values) > 0:
-    normal_features = extract_features(values, fs)
-    print("\nNormal Pipe Signal Features:", normal_features)
-else:
-    print("No valid signal data collected for feature extraction.")
-=======
 def get_signal(values):
     if len(values) > 0:
         normal_features = extract_features(values, fs)
@@ -198,4 +191,3 @@ def get_signal(values):
         return normal_features
     else:
         print("No valid signal data collected for feature extraction.")
->>>>>>> 7fc2b6b32a263724711186bca0cfc1f40aa3e372:PipelineCrack/signal1.py
