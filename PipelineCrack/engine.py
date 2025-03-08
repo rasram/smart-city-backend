@@ -22,9 +22,9 @@ import asyncio
 from signal1 import *
 import joblib
 from crack_model import run_model
-
+from sklearn.preprocessing import StandardScaler
 xgb_model = joblib.load("PipelineCrack/xgboost_model.pkl")
-scaler = joblib.load("PipelineCrack/scaler.pkl")
+scaler = StandardScaler()
 
 def get_signal():
     values, time_list = collect_signal()  # Blocking call (runs for 10s)
