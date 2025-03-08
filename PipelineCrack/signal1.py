@@ -15,6 +15,7 @@ from sklearn.neural_network import MLPRegressor
 
 # Initialize serial connection (replace with your Arduino's port)
 
+#global scaler
 
 def collect_signal():
     ser = serial.Serial('/dev/cu.usbmodem11101', 9600, timeout=1)
@@ -86,8 +87,6 @@ def generate_fem_data(samples=50):
 
 def train_fem_model():
     fem_inputs, fem_outputs = generate_fem_data()
-    global scaler
-    scaler = StandardScaler()
     fem_inputs_scaled = scaler.fit_transform(fem_inputs)
     global gp_model
     gp_model = MLPRegressor(hidden_layer_sizes=(10, 5), max_iter=1000, random_state=42)
@@ -97,6 +96,8 @@ def train_fem_model():
 
 
 def predict_fem(crack_size):
+    global scaler
+    scaler = StandardScaler()
     crack_size_scaled = scaler.transform([[crack_size]])
     return gp_model.predict(crack_size_scaled)[0]
 
