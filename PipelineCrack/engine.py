@@ -20,6 +20,11 @@ asyncio.run(main())  # This ensures the async function runs properly
 
 import asyncio
 from signal1 import *
+import joblib
+from crack_model import run_model
+
+xgb_model = joblib.load("xgboost_model.pkl")
+scaler = joblib.load("scaler.pkl")
 
 def get_signal():
     values, time_list = collect_signal()  # Blocking call (runs for 10s)
@@ -27,7 +32,8 @@ def get_signal():
 
 async def get_crack_result():
     signal = await asyncio.to_thread(get_signal)  # Run get_signal() in a separate thread
-    return signal
+    result = run_model(xgb_model, scaler, signal)
+    return result
 
 async def main():
     result = await get_crack_result()
