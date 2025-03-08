@@ -37,6 +37,5 @@ print(classification_report(y_test, y_pred_xgb))
 
 # Save the model and scaler
 joblib.dump(xgb_model, "xgboost_model.pkl")
-joblib.dump(scaler, "scaler.pkl")
 
 print("Model and scaler saved successfully!")
