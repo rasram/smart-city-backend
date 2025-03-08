@@ -12,11 +12,14 @@ from scipy.integrate import solve_ivp
 from scipy.signal import welch
 from sklearn.preprocessing import StandardScaler
 from sklearn.neural_network import MLPRegressor
+import joblib
+
 
 # Initialize serial connection (replace with your Arduino's port)
 
 #global scaler
-
+scaler1 = StandardScaler()
+global gp_model
 def collect_signal():
     ser = serial.Serial('/dev/cu.usbmodem11101', 9600, timeout=1)
 
@@ -87,18 +90,17 @@ def generate_fem_data(samples=50):
 
 def train_fem_model():
     fem_inputs, fem_outputs = generate_fem_data()
-    fem_inputs_scaled = scaler.fit_transform(fem_inputs)
+    fem_inputs_scaled = scaler1.fit_transform(fem_inputs)
     global gp_model
     gp_model = MLPRegressor(hidden_layer_sizes=(10, 5), max_iter=1000, random_state=42)
     gp_model.fit(fem_inputs_scaled, fem_outputs)
     
-    return scaler, gp_model
+    return scaler1, gp_model
 
 
 def predict_fem(crack_size):
-    global scaler
-    scaler = StandardScaler()
-    crack_size_scaled = scaler.transform([[crack_size]])
+    scaler1, gp_model = train_fem_model()
+    crack_size_scaled = scaler1.transform([[crack_size]])
     return gp_model.predict(crack_size_scaled)[0]
 
 def leakage_pressure_drop(crack_size, P1=1e5, P2=9e4, rho=1000, Cd=0.62, A_ref=1e-4):
