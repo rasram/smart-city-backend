@@ -17,7 +17,7 @@ from sklearn.neural_network import MLPRegressor
 
 
 def collect_signal():
-    ser = serial.Serial('COM10', 9600, timeout=1)
+    ser = serial.Serial('/dev/cu.usbmodem11101', 9600, timeout=1)
 
 # Allow time for Arduino reset
     time.sleep(2)
