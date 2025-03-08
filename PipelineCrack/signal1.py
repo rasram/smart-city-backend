@@ -83,11 +83,18 @@ def generate_fem_data(samples=50):
     fem_wave_responses = np.sin(2 * np.pi * 50 * crack_sizes)
     return crack_sizes.reshape(-1, 1), fem_wave_responses
 
-fem_inputs, fem_outputs = generate_fem_data()
-scaler = StandardScaler()
-fem_inputs_scaled = scaler.fit_transform(fem_inputs)
-gp_model = MLPRegressor(hidden_layer_sizes=(10, 5), max_iter=1000, random_state=42)
-gp_model.fit(fem_inputs_scaled, fem_outputs)
+
+def train_fem_model():
+    fem_inputs, fem_outputs = generate_fem_data()
+    global scaler
+    scaler = StandardScaler()
+    fem_inputs_scaled = scaler.fit_transform(fem_inputs)
+    global gp_model
+    gp_model = MLPRegressor(hidden_layer_sizes=(10, 5), max_iter=1000, random_state=42)
+    gp_model.fit(fem_inputs_scaled, fem_outputs)
+    
+    return scaler, gp_model
+
 
 def predict_fem(crack_size):
     crack_size_scaled = scaler.transform([[crack_size]])
