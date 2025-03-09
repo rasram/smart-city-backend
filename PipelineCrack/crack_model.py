@@ -11,8 +11,8 @@ def run_model(model, scaler, signal):
 
     print(new_data.shape)
     # Scale the new data
-    new_data_scaled = scaler.transform(new_data.reshape(1,14))
-    print(new_data.reshape(1,14))
-    prediction = model.predict(new_data)
+    #new_data_scaled = scaler.transform(new_data.reshape(1,14))
+    #print(new_data.reshape(1,14))
+    prediction = model.predict(new_data.reshape(1,14))
 
     return prediction[0]
