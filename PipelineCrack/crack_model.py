@@ -1,6 +1,6 @@
 import numpy as np
 
-def run_model(xgb_model, scaler, signal):
+def run_model(model, scaler, signal):
     # Convert to NumPy array
     print(signal)
     temp_data = list(signal.values())
@@ -9,13 +9,14 @@ def run_model(xgb_model, scaler, signal):
     # Print to verify
     #print(new_data)
 
-    # Scale the new data
-    new_data_scaled = scaler.transform(new_data.reshape(-1, 1))
+    # # Scale the new data
+    # new_data_scaled = scaler.transform(new_data.reshape(-1, 1))
 
-    # Predict
-    prediction = xgb_model.predict(new_data_scaled)
+    # # Predict
+    # prediction = xgb_model.predict(new_data_scaled)
+    
+    prediction = model.predict(new_data)
+    print("Predicted Class:", prediction[0])
 
-    # Output the prediction
-    print("Predicted Class:", prediction[0])  # 0 = Not Cracked, 1 = Cracked
 
     return prediction[0]
