@@ -9,14 +9,10 @@ def run_model(model, scaler, signal):
     #print(new_data)
     #print(type(new_data))
 
-    # # Scale the new data
-    # new_data_scaled = scaler.transform(new_data.reshape(-1, 1))
-
-    # # Predict
-    # prediction = xgb_model.predict(new_data_scaled)
-    
+    print(new_data.shape)
+    # Scale the new data
+    new_data_scaled = scaler.transform(new_data.reshape(1,14))
+    print(new_data.reshape(1,14))
     prediction = model.predict(new_data)
-    print("Predicted Class:", prediction[0])
-
 
     return prediction[0]
