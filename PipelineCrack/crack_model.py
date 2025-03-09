@@ -2,14 +2,11 @@ import numpy as np
 
 from collections import Counter
 
-def check_correctness(signal):
-    # Round off values in the list
-    rounded_signal = [round(x) for x in signal]
-    
-    # Count occurrences of each unique element
-    count_dict = Counter(rounded_signal)
-    
-    return len(count_dict)
+def check_correctness(signal):    
+    # Get values at odd indices and count how many are greater than 850
+    odd_terms = [signal[i] for i in range(1, len(signal), 2)]
+    correct = sum(1 for x in odd_terms if x > 850)    
+    return correct
 
 def run_model(model, scaler, signal):
     # Convert to NumPy array
@@ -25,9 +22,9 @@ def run_model(model, scaler, signal):
     #new_data_scaled = scaler.transform(new_data.reshape(1,14))
     #print(new_data.reshape(1,14))
     prediction = model.predict(new_data.reshape(1,14)) 
-    predict = True
-    if(prediction == 0.0):
-        predict = False
-    if scaler== 2:
-        return False
-    return True
+    if prediction[0]==1.0:
+        return 1.0
+    else:
+        if(scaler>2):
+            return 1.0        
+    return prediction[0]
