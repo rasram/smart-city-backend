@@ -80,9 +80,9 @@ async def process(image: UploadFile = File(...)):
 
 @app.get("/crack_result")
 async def crack_result():
-    result = get_crack_result()
+    result = "Crack" if get_crack_result() == 1 else "Normal"
     return JSONResponse({
-        'classification': f"{result}",
+        '1': f"{result}",
     })
 
 if __name__ == "__main__":
