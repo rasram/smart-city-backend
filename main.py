@@ -11,7 +11,9 @@ from WasteClassification.chat import config, inverse_kinematics, process_image, 
 import tensorflow as tf
 from PipelineCrack.engine import get_crack_result
 from PipelineCrack.signal1 import *
-
+import math
+import asyncio
+EPSILON = 1e-6
 app = FastAPI()
 
 app.add_middleware(
@@ -80,11 +82,22 @@ async def process(image: UploadFile = File(...)):
     })
 
 @app.get("/crack_result")
+
 async def crack_result():
     #result = "Crack" if get_crack_result() == 1.0 else "Normal"
+    status = await get_crack_result()
+    print(type(status))
+    print(status)
+    #task = asyncio.Task(get_crack_result)
+    
+    if status == 1.0:
+        crack = True
+    else:
+        crack = False
+    
     return JSONResponse(
         
-        {"id": 1, "has_crack": "Crack"}
+        {"id": 1, "has_crack": crack}
     )
 
 if __name__ == "__main__":
