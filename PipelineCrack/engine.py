@@ -19,13 +19,13 @@ asyncio.run(main())  # This ensures the async function runs properly
 
 
 import asyncio
-from signal1 import *
+from PipelineCrack.signal1 import *
 import joblib
-from crack_model import run_model,check_correctness;
+from PipelineCrack.crack_model import run_model,check_correctness;
 from sklearn.preprocessing import StandardScaler
-xgb_model = joblib.load("xgboost_model.pkl")
-scaler = joblib.load("scaler.pkl")
-loaded_rf_model = joblib.load("random_forest_model.pkl")
+#xgb_model = joblib.load("xgboost_model.pkl")
+#scaler = joblib.load("scaler.pkl")
+loaded_rf_model = joblib.load("PipelineCrack/random_forest_model.pkl")
 
 def get_signal():
     values, time_list = collect_signal()  # Blocking call (runs for 10s)
