@@ -3,22 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mathematical Model for Synthetic Data Generation</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.1/chart.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <title>Mathematical Model for Synthetic Data Generation</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            line-height: 1.6;
             margin: 20px;
             padding: 20px;
-        }
-        h1, h3, h3 {
+            background-color: #f9f9f9;
             color: #333;
+            transition: background 0.3s, color 0.3s;
         }
-        .equation {
-            background: #f4f4f4;
-            padding: 10px;
-            border-left: 5px solid #333;
-            font-family: monospace;
+        .dark-mode {
+            background-color: #222;
+            color: white;
         }
         .navbar {
             background-color: #333;
@@ -27,66 +31,207 @@
             text-align: center;
             font-size: 20px;
             font-weight: bold;
+            position: sticky;
+            top: 0;
+            width: 100%;
+        }
+        .toggle-btn {
+            background: #555;
+            color: white;
+            border: none;
+            padding: 10px;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        .equation {
+            background: #f4f4f4;
+            padding: 10px;
+            border-left: 5px solid #333;
+            font-family: monospace;
+            transition: 0.3s;
+        }
+        .collapsible {
+            background: #444;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            border: none;
+            text-align: left;
+            width: 100%;
+            outline: none;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+        .content {
+            display: none;
+            padding: 10px;
+            border-left: 5px solid #888;
+            background: #f9f9f9;
+            color: #0c131b;
+        }
+        canvas {
+            max-width: 600px;
+            margin: 20px auto;
+        }
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #f8f9fa;
+        }
+        .container {
+            max-width: 900px;
+            margin: auto;
+            padding: 20px;
+        }
+        h2, h3 {
+            color: #444;
+        }
+        .equation {
+            background: #e9ecef;
+            padding: 10px;
+            border-left: 5px solid #333;
+            font-family: monospace;
+            overflow-x: auto;
+            transition: background 0.3s;
+        }
+        .equation:hover {
+            background: #d6d8db;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            background: #fff;
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+        li:hover {
+            transform: scale(1.02);
+        }
+        .collapsible {
+            background-color: #0c131b;
+            color: white;
+            cursor: pointer;
+            padding: 10px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            font-size: 16px;
+            margin-top: 10px;
+            border-radius: 5px;
+            transition: background 0.3s;
+        }
+        .collapsible:hover {
+            background-color: #dfffdc;
+            color: black;
+        }
+        .content {
+            display: none;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            background: white;
+            margin-top: 5px;
         }
     </style>
 </head>
 <body>
     <div class="navbar">Group-7</div>
-   <center><strong><h2>Mathematical Model for Crack Growth and Synthetic Data Generation</h2></strong></center> 
-    <p>This model integrates fracture mechanics, fluid dynamics, and wave propagation to simulate crack growth, pressure changes, and ultrasonic signal responses.</p>
+    <button class="toggle-btn" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <div class="container">
+        <center><h2>Mathematical Model for Crack Growth and Synthetic Data Generation</h2></center> 
+        <p>This model integrates fracture mechanics, fluid dynamics, and wave propagation to simulate crack growth, pressure changes, and ultrasonic signal responses.</p>
+        
+        <button class="collapsible">1. Crack Growth Model (Extended Paris Law)</button>
+        <div class="content">
+            <p>The crack growth follows an extended Paris’ Law, incorporating stress corrosion cracking (SCC) and temperature dependence:</p>
+            <div class="equation">da/dt = C_T * (σ * πa)^m * (1 + SCC_factor) * C_x</div>
+            <h3>Explanation of Terms:</h3>
+            <ul>
+                <li><strong>a</strong>: Crack length (meters)</li>
+                <li><strong>t</strong>: Time (seconds)</li>
+                <li><strong>C_T</strong>: Temperature-dependent growth coefficient: <div class="equation">C_T = C_0 * e^(-μ / RT)</div></li>
+                <li><strong>σ</strong>: Applied stress (Pascals)</li>
+                <li><strong>m</strong>: Paris law exponent</li>
+                <li><strong>SCC_factor</strong>: Growth due to SCC: <div class="equation">SCC_factor = α(h3S / C_threshold)^β</div></li>
+                <li><strong>C_x</strong>: Random variability factor (Gaussian noise)</li>
+            </ul>
+        </div>
+
+        <button class="collapsible">2. Leakage Pressure Drop Model (Fluid Dynamics)</button>
+        <div class="content">
+            <p>Once a crack forms, it allows fluid leakage, causing a pressure drop:</p>
+            <div class="equation">ΔP = (1/2) * ρ * v^2</div>
+            <p>Velocity:</p>
+            <div class="equation">v = sqrt(2 * (P1 - P2) / ρ)</div>
+            <h3>Flow Rate through the Crack:</h3>
+            <div class="equation">Q = C_d * A * v</div>
+            <p>A is the crack opening area: <div class="equation">A = A_ref * (a / a_0)</div></p>
+        </div>
+
+        <button class="collapsible">3. Ultrasonic Wave Response (FEM Model)</button>
+        <div class="content">
+            <p>Wave response follows a finite element model:</p>
+            <div class="equation">FEM_Response = sin(2πfa)</div>
+            <p>With noise:</p>
+            <div class="equation">Wave_Signal = sin(2πft) + 0.5 * Burst_Noise</div>
+        </div>
+
+        <button class="collapsible">4. Spectral Entropy Computation</button>
+        <div class="content">
+            <p>To quantify signal complexity:</p>
+            <div class="equation">H = -∑ p_i log2(p_i)</div>
+        </div>
+
+        <button class="collapsible">5. Feature Extraction for ML Training</button>
+        <div class="content">
+            <ul>
+                <li><strong>Amplitude (A):</strong> <div class="equation">max(Wave_Signal)</div></li>
+                <li><strong>Duration (T_d):</strong> <div class="equation">max(0.5, min(5, a * 1000))</div></li>
+                <li><strong>Energy (E):</strong> <div class="equation">(1/2) * A^2 * T_d</div></li>
+                <li><strong>Rise Time (T_r):</strong> <div class="equation">T_d / 10</div></li>
+                <li><strong>Peak Frequency (f_p):</strong> <div class="equation">max(10, min(100, 50 + a * 1000))</div></li>
+                <li><strong>RMS Voltage (V_rms):</strong> <div class="equation">A / 10</div></li>
+                <li><strong>Signal Attenuation (S_att):</strong> <div class="equation">max(0.1, min(5, a * 100 * M * D))</div></li>
+            </ul>
+        </div>
+    </div>
     
-    <h3>1. Crack Growth Model (Extended Paris Law)</h3>
-    <p>The crack growth follows an extended Paris’ Law, incorporating stress corrosion cracking (SCC) and temperature dependence:</p>
-    <div class="equation">da/dt = C_T * (σ * πa)^m * (1 + SCC_factor) * C_x</div>
-    <h3>Explanation of Terms:</h3>
-    <ul>
-        <li><strong>a</strong>: Crack length (meters)</li>
-        <li><strong>t</strong>: Time (seconds)</li>
-        <li><strong>C_T</strong>: Temperature-dependent growth coefficient, modeled as: <div class="equation">C_T = C_0 * e^(-μ / RT)</div></li>
-        <li><strong>σ</strong>: Applied stress (Pascals)</li>
-        <li><strong>m</strong>: Paris law exponent, an empirical constant</li>
-        <li><strong>SCC_factor</strong>: Growth due to SCC: <div class="equation">SCC_factor = α(h3S / C_threshold)^β</div></li>
-        <li><strong>C_x</strong>: Random variability factor (simulated using Gaussian noise)</li>
-    </ul>
+
+    <canvas id="crackGrowthChart"></canvas>
     
-    <h3>2. Leakage Pressure Drop Model (Fluid Dynamics)</h3>
-    <p>Once a crack forms, it allows fluid leakage, causing a pressure drop:</p>
-    <div class="equation">ΔP = (1/2) * ρ * v^2</div>
-    <p>where velocity is given by:</p>
-    <div class="equation">v = sqrt(2 * (P1 - P2) / ρ)</div>
-    <h3>Flow Rate through the Crack:</h3>
-    <div class="equation">Q = C_d * A * v</div>
-    <p>where A is the crack opening area: <div class="equation">A = A_ref * (a / a_0)</div></p>
-    
-    <h3>3. Ultrasonic Wave Response (FEM Model)</h3>
-    <p>The response follows a finite element model:</p>
-    <div class="equation">FEM_Response = sin(2πfa)</div>
-    <p>with noise added:</p>
-    <div class="equation">Wave_Signal = sin(2πft) + 0.5 * Burst_Noise</div>
-    
-    <h3>4. Spectral Entropy Computation</h3>
-    <p>To quantify signal complexity:</p>
-    <div class="equation">H = -∑ p_i log2(p_i)</div>
-    
-    <h3>5. Feature Extraction for ML Training</h3>
-    <ul>
-        <li><strong>Amplitude (A):<div class="equation">max(Wave_Signal)</div></strong></li>
-        <li><strong>Duration (T_d):</strong><div class="equation"> max(0.5, min(5, a * 1000))</div></li>
-        <li><strong>Energy (E):</strong><div class="equation"> (1/2) * A^2 * T_d</div></li>
-        <li><strong>Rise Time (T_r):</strong><div class="equation"> T_d / 10</div></li>
-        <li><strong>Peak Frequency (f_p):</strong><div class="equation"> max(10, min(100, 50 + a * 1000))</div></li>
-        <li><strong>RMS Voltage (V_rms):</strong><div class="equation">A / 10</div> </li>
-        <li><strong>Signal Attenuation (S_att):</strong> <div class="equation">max(0.1, min(5, a * 100 * M * D))</div></li>
-    </ul>
-    
-    <h3>6. Final Output: Hybrid Dataset</h3>
-    <p>The dataset includes:</p>
-    <ul>
-        <li>Crack growth history</li>
-        <li>Pressure variations</li>
-        <li>Ultrasonic signal responses</li>
-        <li>Extracted ML features</li>
-    </ul>
-    <p>This dataset trains ML models for automated damage detection.</p>
+    <script>
+        function toggleDarkMode() {
+            document.body.classList.toggle("dark-mode");
+        }
+        
+        document.querySelectorAll(".collapsible").forEach(button => {
+            button.addEventListener("click", function () {
+                this.nextElementSibling.style.display = this.nextElementSibling.style.display === "block" ? "none" : "block";
+            });
+        });
+        
+        const ctx = document.getElementById('crackGrowthChart').getContext('2d');
+        new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+                datasets: [{
+                    label: 'Crack Growth',
+                    data: [0.1, 0.3, 0.8, 1.5, 2.6, 4.2, 6.8, 10.1, 14.3, 19.8],
+                    borderColor: 'blue',
+                    fill: false
+                }]
+            }
+        });
+    </script>
 </body>
 </html>
