@@ -1,22 +1,23 @@
 import numpy as np
-import random
+from scipy.optimize import fmin_l_bfgs_b
 
-#Using Genetic Algorithm
-# Robot arm parameters
+# Robot arm parameters (simplified)
 joint_limits = [(-180, 180), (-90, 90), (-90, 90), (-180, 180), (-90, 90), (-180, 180)]  # Joint angle limits for 6 DOF
 arm_lengths = [0.2, 0.5, 0.7, 0.3, 0.6, 0.5]  # Lengths of the robot arm segments
 
 # Inverse Kinematics Solver (simplified version)
 def inverse_kinematics(target_position):
     # A simplified inverse kinematics solver (replace with your own IK solver)
-    # Assuming a 3DOF arm for simplicity (just an example)
     x, y, z = target_position
     # Solve for joint angles (this would be more complex in a real scenario)
     joint_angles = np.random.uniform(-180, 180, 6)  # Random values for now
     return joint_angles
 
-# Fitness function (objective function)
-def fitness_function(individual, trajectory_points):
+# Fitness function (objective function) for L-BFGS optimization
+def fitness_function(individual, trajectory_points, num_joints, num_points):
+    # Reshape the individual to have shape (num_points, num_joints)
+    individual_reshaped = individual.reshape((num_points, num_joints))
+    
     total_energy = 0
     total_time = 0
     total_rotation = 0
@@ -49,80 +50,16 @@ def calculate_rotation(start, end):
     rotation = np.sum(np.abs(np.array(start) - np.array(end)))
     return rotation
 
-# Genetic Algorithm Functions
+# Run Genetic Algorithm to initialize population
 def initialize_population(population_size, num_joints, num_points):
-    # Initialize population with random joint angles within their limits
-    low_bounds = np.tile(np.array([limit[0] for limit in joint_limits]), num_points)
-    high_bounds = np.tile(np.array([limit[1] for limit in joint_limits]), num_points)
+    # Correct the shape here: we need `population_size` individuals, each with `num_joints * num_points`
+    return np.random.uniform(low=-180, high=180, size=(population_size, num_joints * num_points))
 
-    # Generate a population of random joint angles within the bounds
-    population = np.random.uniform(low=low_bounds, high=high_bounds, size=(population_size, num_joints * num_points))
-    
-    return population
-
-
-def select_parents(population, fitness_values, num_parents):
-    # Select parents based on fitness (roulette wheel or tournament selection)
-    selected_parents = []
-    fitness_sum = np.sum(fitness_values)
-    probabilities = fitness_values / fitness_sum
-    cumulative_probabilities = np.cumsum(probabilities)
-    
-    for _ in range(num_parents):
-        rand_val = random.random()
-        selected_parents.append(population[np.searchsorted(cumulative_probabilities, rand_val)])
-    
-    return np.array(selected_parents)
-
-def crossover_and_mutate(parents, crossover_rate=0.7, mutation_rate=0.1):
-    # Crossover and mutation operations to generate offspring
-    offspring = []
-    num_parents = len(parents)
-    num_children = num_parents // 2
-    
-    # Crossover
-    for i in range(num_children):
-        parent1, parent2 = parents[2*i], parents[2*i+1]
-        crossover_point = random.randint(1, len(parent1)-1)
-        child1 = np.concatenate((parent1[:crossover_point], parent2[crossover_point:]))
-        child2 = np.concatenate((parent2[:crossover_point], parent1[crossover_point:]))
-        
-        offspring.append(child1)
-        offspring.append(child2)
-    
-    # Mutation
-    for child in offspring:
-        if random.random() < mutation_rate:
-            mutation_point = random.randint(0, len(child)-1)
-            child[mutation_point] += np.random.uniform(-10, 10)  # Small mutation
-    
-    return np.array(offspring)
-
-def genetic_algorithm(population_size, generations, trajectory_points):
-    num_joints = len(joint_limits)
-    num_points = len(trajectory_points)
-    
-    # Initialize population
-    population = initialize_population(population_size, num_joints, num_points)
-    
-    for generation in range(generations):
-        # Evaluate fitness of the population
-        fitness_values = np.array([fitness_function(individual, trajectory_points) for individual in population])
-        
-        # Select parents for the next generation
-        num_parents = population_size // 2
-        parents = select_parents(population, fitness_values, num_parents)
-        
-        # Create offspring through crossover and mutation
-        offspring = crossover_and_mutate(parents)
-        
-        # Create the next generation (parents + offspring)
-        population[:num_parents] = parents
-        population[num_parents:] = offspring
-    
-    # Return the best individual (solution) from the final population
-    best_individual = population[np.argmin(fitness_values)]
-    return best_individual
+# L-BFGS optimization (fine-tuning after GA)
+def optimize_with_lbfgs(initial_solution, trajectory_points, num_joints, num_points):
+    # Use L-BFGS to fine-tune the solution obtained by GA
+    result = fmin_l_bfgs_b(fitness_function, initial_solution, args=(trajectory_points, num_joints, num_points), approx_grad=True)
+    return result
 
 # Example trajectory points (in 3D space)
 trajectory_points = np.array([
@@ -138,9 +75,20 @@ trajectory_points = np.array([
     [0.8, -1.25, -1.35]
 ])
 
-# Running the genetic algorithm to optimize the trajectory
+# Running the genetic algorithm to optimize the trajectory (initial GA population)
 population_size = 100
-generations = 1000
-best_trajectory = genetic_algorithm(population_size, generations, trajectory_points)
+num_joints = 6  # Number of joints
+num_points = len(trajectory_points)  # Number of trajectory points
 
-print("Optimized trajectory:", best_trajectory)
+# Initialize the population using GA
+population = initialize_population(population_size, num_joints, num_points)
+
+# For simplicity, let's take the best individual from the GA population
+# In a real scenario, you would evaluate the fitness of all individuals and select the best
+best_individual_from_ga = population[0]
+
+# Fine-tune the best individual from GA using L-BFGS
+optimized_solution = optimize_with_lbfgs(best_individual_from_ga, trajectory_points, num_joints, num_points)
+
+# Print the optimized solution
+print("Optimized trajectory (L-BFGS fine-tuning):", optimized_solution)
