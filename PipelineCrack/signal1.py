@@ -53,7 +53,7 @@ def collect_signal():
                     
                     # Write data to CSV
                     writer.writerow([round(current_time, 2), 2000 - dist_value])
-                    print(f"Time: {round(current_time, 2)}s | Distance: {dist_value} cm")
+                    print(f"Time: {round(current_time, 2)}s | {dist_value}")
                 
                 except ValueError:
                     print("Invalid data received, skipping...")
