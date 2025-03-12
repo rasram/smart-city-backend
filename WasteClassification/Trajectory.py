@@ -64,7 +64,9 @@ def optimize_angles(initial_angles, target):
     return result.x
 
 # Get Target Input
-x_target, y_target = map(float, input("Enter target (x, y) in meters: ").split())
+#x_target, y_target = map(float, input("Enter target (x, y) in meters: ").split())
+x_target = float(input("Enter x: "))
+y_target = float(input("Enter y: "))
 target = np.array([x_target, y_target])
 
 if not is_within_workspace(target):
