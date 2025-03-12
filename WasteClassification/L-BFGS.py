@@ -77,7 +77,7 @@ trajectory_points = np.array([
 
 # Running the genetic algorithm to optimize the trajectory (initial GA population)
 population_size = 100
-num_joints = 2  # Number of joints
+num_joints = 3  # Number of joints
 num_points = len(trajectory_points)  # Number of trajectory points
 
 # Initialize the population using GA
