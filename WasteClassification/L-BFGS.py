@@ -2,7 +2,7 @@ import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 
 # Robot arm parameters (simplified)
-joint_limits = [(-180, 180), (-180, 180), (-90, 90)]  # Joint angle limits for 6 DOF
+joint_limits = [(-180, 180), (-180, 180), (0, 0.2)]  # Joint angle limits for 6 DOF
 arm_lengths = [0.5, 0.4, 0.2]  # Lengths of the robot arm segments
 
 # Inverse Kinematics Solver (simplified version)
