@@ -2,8 +2,8 @@ import numpy as np
 from scipy.optimize import fmin_l_bfgs_b
 
 # Robot arm parameters (simplified)
-joint_limits = [(-180, 180), (-90, 90), (-90, 90), (-180, 180), (-90, 90), (-180, 180)]  # Joint angle limits for 6 DOF
-arm_lengths = [0.2, 0.5, 0.7, 0.3, 0.6, 0.5]  # Lengths of the robot arm segments
+joint_limits = [(-180, 180), (-180, 180), (-90, 90)]  # Joint angle limits for 6 DOF
+arm_lengths = [0.5, 0.4, 0.2]  # Lengths of the robot arm segments
 
 # Inverse Kinematics Solver (simplified version)
 def inverse_kinematics(target_position):
@@ -77,7 +77,7 @@ trajectory_points = np.array([
 
 # Running the genetic algorithm to optimize the trajectory (initial GA population)
 population_size = 100
-num_joints = 6  # Number of joints
+num_joints = 2  # Number of joints
 num_points = len(trajectory_points)  # Number of trajectory points
 
 # Initialize the population using GA
@@ -92,3 +92,4 @@ optimized_solution = optimize_with_lbfgs(best_individual_from_ga, trajectory_poi
 
 # Print the optimized solution
 print("Optimized trajectory (L-BFGS fine-tuning):", optimized_solution)
+#print(optimized_solution.shape)
