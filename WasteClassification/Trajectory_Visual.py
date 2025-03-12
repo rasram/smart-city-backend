@@ -1,45 +1,68 @@
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.animation as animation
 
-# Given link lengths
-L1 = 0.5  # Length of Link 1
-L2 = 0.4  # Length of Link 2
+# SCARA Robot Parameters
+L1, L2 = 0.5, 0.4  # Arm lengths (meters)
+workspace_radius = L1 + L2
 
-# Optimized joint angles from GA
-optimized_trajectory = np.array([
-    [-0.17953312,  1.98231341],
-    [-4.83672954,  4.38691937],
-    [ 1.42291011, -1.80757067],
-    [ 1.3960342,  -1.71574538],
-    [-0.02192139,  1.62019879],
-    [ 1.06222641, -0.92013862],
-    [ 0.06971221, -4.86857872],
-    [ 0.12019902,  1.30214288],
-    [ 1.2069928,  -1.18073291],
-    [ 0.23520025,  1.04720063]
-])
+def is_within_workspace(target):
+    return np.linalg.norm(target) <= workspace_radius
 
-# Compute end-effector positions
-x_positions = []
-y_positions = []
+# Inverse Kinematics
+def inverse_kinematics(target):
+    x, y = target
+    d = (x**2 + y**2 - L1**2 - L2**2) / (2 * L1 * L2)
+    if abs(d) > 1:
+        return None  # No solution exists
+    
+    theta2 = np.arctan2(np.sqrt(1 - d**2), d)  # Elbow up configuration
+    theta1 = np.arctan2(y, x) - np.arctan2(L2 * np.sin(theta2), L1 + L2 * np.cos(theta2))
+    return np.array([theta1, theta2])
 
-for theta1, theta2 in optimized_trajectory:
-    x = L1 * np.cos(theta1) + L2 * np.cos(theta1 + theta2)
-    y = L1 * np.sin(theta1) + L2 * np.sin(theta1 + theta2)
-    x_positions.append(x)
-    y_positions.append(y)
+# Interactive Target Input
+x_target, y_target = map(float, input("Enter target (x, y) in meters: ").split())
+target = np.array([x_target, y_target])
 
-# Plot the trajectory
-plt.figure(figsize=(6, 6))
-plt.plot(x_positions, y_positions, 'ro-', markersize=5, label="End-Effector Path")
+if not is_within_workspace(target):
+    print("Target is out of the workspace!")
+    exit()
 
-# Mark start and end points
-plt.scatter(x_positions[0], y_positions[0], color='green', s=100, label="Start")
-plt.scatter(x_positions[-1], y_positions[-1], color='blue', s=100, label="End")
+# Solve Inverse Kinematics
+angles = inverse_kinematics(target)
+if angles is None:
+    print("No valid inverse kinematics solution!")
+    exit()
 
-plt.xlabel("X Position")
-plt.ylabel("Y Position")
-plt.title("Optimized End-Effector Trajectory")
+# Animation Setup
+fig, ax = plt.subplots()
+ax.set_xlim(-workspace_radius, workspace_radius)
+ax.set_ylim(-workspace_radius, workspace_radius)
+ax.set_xlabel("X-axis (meters)")
+ax.set_ylabel("Y-axis (meters)")
+ax.set_title("SCARA Robot Inverse Kinematics Simulation")
+ax.grid(True)
+ax.scatter([x_target], [y_target], color="red", marker="x", label="Target")
+
+arm1, = ax.plot([], [], 'ro-', lw=2)
+arm2, = ax.plot([], [], 'bo-', lw=2)
+
+def forward_kinematics(theta1, theta2):
+    x1, y1 = L1 * np.cos(theta1), L1 * np.sin(theta1)
+    x2, y2 = x1 + L2 * np.cos(theta1 + theta2), y1 + L2 * np.sin(theta1 + theta2)
+    return np.array([[0, x1, x2], [0, y1, y2]])
+
+frames = np.linspace(0, 1, 30)  # Smooth interpolation
+theta1_vals = np.linspace(0, angles[0], len(frames))
+theta2_vals = np.linspace(0, angles[1], len(frames))
+
+def update(frame):
+    theta1, theta2 = theta1_vals[frame], theta2_vals[frame]
+    positions = forward_kinematics(theta1, theta2)
+    arm1.set_data(positions[0, :2], positions[1, :2])
+    arm2.set_data(positions[0, 1:], positions[1, 1:])
+    return arm1, arm2
+
+ani = animation.FuncAnimation(fig, update, frames=len(frames), interval=100, blit=True)
 plt.legend()
-plt.grid(True)
 plt.show()
