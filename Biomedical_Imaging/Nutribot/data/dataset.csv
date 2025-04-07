@@ -1,0 +1,45 @@
+food_id,name,calories,spicy,sweet,vegan,protein,carbs,fat
+0,Grilled Chicken,432,1,0,1,4,1,5
+1,Veg Salad,135,1,0,0,2,3,1
+2,Spicy Paneer,124,0,0,1,4,2,2
+3,Fruit Bowl,252,1,1,0,5,1,3
+4,Butter Chicken,357,1,0,1,5,3,3
+5,Mushroom Curry,201,1,0,1,5,3,4
+6,Pasta Alfredo,490,1,0,0,2,4,4
+7,Choco Cake,391,1,1,0,2,3,5
+8,Tofu Stir Fry,316,0,0,0,5,4,2
+9,Tomato Soup,466,1,1,1,1,1,1
+10,Cheese Sandwich,468,0,0,0,2,3,2
+11,Green Smoothie,295,1,1,1,4,2,3
+12,Lentil Soup,405,1,1,0,4,5,2
+13,Pancakes,357,1,1,0,1,3,1
+14,Fried Rice,284,1,0,1,4,4,5
+15,Veg Biryani,326,0,0,0,3,3,4
+16,Mutton Curry,281,0,1,1,5,5,4
+17,Chicken Tikka,251,1,1,1,1,4,5
+18,Dal Tadka,393,1,1,1,3,3,1
+19,Sushi Rolls,231,1,0,1,1,4,1
+20,Veggie Wrap,144,1,0,0,4,1,2
+21,Cereal Bowl,423,0,1,0,2,3,4
+22,Omelette,481,1,0,0,1,3,3
+23,Keto Salad,234,1,1,0,3,3,5
+24,Peanut Butter Toast,215,0,1,1,4,3,1
+25,Chocolate Muffin,400,0,0,1,1,2,1
+26,Apple Pie,312,1,0,0,5,1,2
+27,Gulab Jamun,435,1,0,0,2,1,4
+28,Rajma Chawal,343,1,1,0,5,1,3
+29,Upma,342,1,1,0,3,2,3
+30,Idli Sambar,319,0,0,0,4,5,5
+31,Dosa,172,1,0,1,2,4,2
+32,Bhel Puri,151,0,1,1,3,5,4
+33,Rasam Rice,408,1,1,1,5,5,2
+34,Fish Curry,323,0,0,1,5,1,3
+35,Egg Curry,444,1,1,0,1,1,1
+36,Chana Masala,216,1,1,1,1,3,3
+37,Veg Manchurian,182,0,0,1,5,2,5
+38,Spring Rolls,361,0,1,1,2,2,3
+39,Hummus Pita,192,1,1,1,2,1,4
+40,Paneer Wrap,136,0,1,1,1,2,3
+41,Nachos,196,1,0,1,2,1,5
+42,Corn Soup,201,1,0,1,5,4,2
+43,Fruit Yogurt,368,0,1,0,3,3,2
