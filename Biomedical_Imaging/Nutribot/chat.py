@@ -1,15 +1,22 @@
 import google.generativeai as genai
+from google.generativeai import GenerativeModel
 import pandas as pd
-
-# Set Gemini API key
-genai.configure(api_key="")
+import os
+from dotenv import load_dotenv
 
 # Load datasets
-nutrition_df = pd.read_csv("data/food_dataset.csv")
+nutrition_df = pd.read_csv("Biomedical_Imaging/Nutribot/data/food_dataset.csv")
 
+project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+dotenv_path = os.path.join(project_root, '.env')
 
-# Load Gemini model
-model = genai.GenerativeModel("gemini-1.5-pro")
+load_dotenv(dotenv_path)
+
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+
+genai.configure(api_key=GOOGLE_API_KEY)
+global model
+model = GenerativeModel('gemini-1.5-pro') 
 
 # Build context combining both datasets
 def build_context():

@@ -5,7 +5,7 @@ import pandas as pd
 import joblib
 
 # Load dataset
-df = pd.read_csv("hybrid_synthetic_ultrasonic_data_with_labels.csv")  # Update with the actual filename
+df = pd.read_csv("hybrid_synthetic_ultrasonic_data_with_labels_falsified.csv")  # Update with the actual filename
 
 # Split features and target
 X = df.drop(columns=["Cracked"])  # Features
@@ -28,3 +28,27 @@ print("Model saved successfully!")
 # Evaluate
 print("Random Forest Accuracy:", accuracy_score(y_test, y_pred))
 print(classification_report(y_test, y_pred))
+
+# Additional metrics
+from sklearn.metrics import precision_score, recall_score, f1_score, roc_auc_score, confusion_matrix
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+precision = precision_score(y_test, y_pred, average='binary')
+recall = recall_score(y_test, y_pred, average='binary')
+f1 = f1_score(y_test, y_pred, average='binary')
+roc_auc = roc_auc_score(y_test, rf_model.predict_proba(X_test)[:, 1])
+
+print("Precision:", precision)
+print("Recall:", recall)
+print("F1 Score:", f1)
+print("ROC AUC Score:", roc_auc)
+
+# Confusion matrix visualization
+conf_matrix = confusion_matrix(y_test, y_pred)
+plt.figure(figsize=(8, 6))
+sns.heatmap(conf_matrix, annot=True, fmt='d', cmap='Blues', xticklabels=['No Crack', 'Crack'], yticklabels=['No Crack', 'Crack'])
+plt.xlabel('Predicted')
+plt.ylabel('Actual')
+plt.title('Confusion Matrix')
+plt.show()

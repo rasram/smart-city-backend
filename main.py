@@ -6,11 +6,12 @@ from fastapi.middleware.cors import CORSMiddleware
 import overpy
 import os
 import uvicorn
-from WasteClassification.chat import config, inverse_kinematics, process_image, run_chat_model
+from WasteClassification.chat import process_image, run_chat_model
 from Biomedical_Imaging.engine import run_model
 import tensorflow as tf
 """ from PipelineCrack.engine import get_crack_result
 from PipelineCrack.signal1 import * """
+from Biomedical_Imaging.Nutribot.engine import *
 import math
 import asyncio
 EPSILON = 1e-6
@@ -26,8 +27,6 @@ app.add_middleware(
 
 #mri_model = tf.keras.models.load_model("Biomedical_Imaging/MRI/DenseNet121_MRI.h5")
 #xray_model = tf.keras.models.load_model("Biomedical_Imaging/XRay/DenseNet121_XRay.h5")
-
-config()
 
 @app.post("/mri")
 async def predict(image: UploadFile = File(...)):
@@ -99,6 +98,20 @@ async def crack_result():
         
         {"id": 1, "has_crack": crack}
     ) """
+
+@app.get("/recommendations")
+async def recommendations(calorie_limit: int = Query(...)):
+    result = get_recommendations(calorie_limit)
+    return JSONResponse(content=result)
+
+@app.post("/chat")
+async def nutribot_chat(request: Request):
+    data = await request.json()
+    message = data.get("message")
+    if not message:
+        raise HTTPException(status_code=400, detail="Message is required.")
+    response_text = get_nutribot_response(message)
+    return JSONResponse({"response": response_text})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))

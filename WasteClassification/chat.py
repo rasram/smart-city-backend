@@ -13,17 +13,17 @@ l1 = 100
 l2 = 100
 x_bin, y_bin = 150, 150
 
-def config():
-    project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-    dotenv_path = os.path.join(project_root, '.env')
+project_root = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+dotenv_path = os.path.join(project_root, '.env')
 
-    load_dotenv(dotenv_path)
+load_dotenv(dotenv_path)
 
-    GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
+GOOGLE_API_KEY = os.getenv('GOOGLE_API_KEY')
 
-    genai.configure(api_key=GOOGLE_API_KEY)
-    global model
-    model = GenerativeModel('gemini-1.5-pro')    
+genai.configure(api_key=GOOGLE_API_KEY)
+global model
+model = GenerativeModel('gemini-1.5-pro') 
+       
 
 def inverse_kinematics(x, y):
     """Compute the joint angles for the SCARA robot."""

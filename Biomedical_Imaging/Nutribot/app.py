@@ -9,7 +9,7 @@ from graph_builder import G  # Your NetworkX graph
 from chat import get_bot_response
 
 # Load dataset
-food_df = pd.read_csv("data/dataset.csv")  # Adjust path if needed
+food_df = pd.read_csv("Biomedical_Imaging/Nutribot/data/food_dataset.csv")  # Adjust path if needed
 
 st.title("🥗 NutriBot - Smart Food Recommender")
 st.markdown("Get the best food suggestions under your calorie goal!")

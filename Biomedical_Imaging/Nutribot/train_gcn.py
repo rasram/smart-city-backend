@@ -1,5 +1,5 @@
 # train_gcn.py
-from gcn_model import GCN
+from .gcn_model import GCN
 import torch
 
 def train_gcn(data, epochs=100):
