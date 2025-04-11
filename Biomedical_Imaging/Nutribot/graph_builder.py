@@ -4,7 +4,7 @@ import networkx as nx
 from .user_simulator import generate_user_profile
 
 # Load the food dataset
-food_df = pd.read_csv("Biomedical_Imaging/Nutribot/data/food_dataset.csv")
+food_df = pd.read_csv("data\dataset.csv")
 
 # Simulate a user
 user = generate_user_profile()
