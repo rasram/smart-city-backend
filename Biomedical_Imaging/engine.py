@@ -3,8 +3,8 @@ from tensorflow.keras.preprocessing import image as keras_image
 from fastapi import UploadFile
 import io
 
+xray_model = tf.keras.models.load_model("Biomedical_Imaging/XRay/XRay_DenseNet121_Optimized.h5")
 mri_model = tf.keras.models.load_model("Biomedical_Imaging/MRI/MRI_DenseNet121_Optimized.h5")
-xray_model = tf.keras.models.load_model("Biomedical_Imaging/XRay/DenseNet121_XRay.h5")
 
 async def run_model(image_type, file: UploadFile):
   if image_type not in ["MRI", "XRay"]:

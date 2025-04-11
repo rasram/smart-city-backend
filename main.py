@@ -9,8 +9,8 @@ import uvicorn
 from WasteClassification.chat import process_image, run_chat_model
 from Biomedical_Imaging.engine import run_model
 import tensorflow as tf
-from PipelineCrack.engine import get_crack_result
-from PipelineCrack.signal1 import *
+""" from PipelineCrack.engine import get_crack_result
+from PipelineCrack.signal1 import * """
 from Biomedical_Imaging.Nutribot.engine import *
 import math
 import asyncio
@@ -80,8 +80,7 @@ async def process(image: UploadFile = File(...)):
         'classification': classification_result,
     })
 
-@app.get("/crack_result")
-
+""" @app.get("/crack_result")
 async def crack_result():
     #result = "Crack" if get_crack_result() == 1.0 else "Normal"
     status = await get_crack_result()
@@ -97,7 +96,7 @@ async def crack_result():
     return JSONResponse(
         
         {"id": 1, "has_crack": crack}
-    )
+    ) """
 
 @app.get("/recommendations")
 async def recommendations(calorie_limit: int = Query(...)):
