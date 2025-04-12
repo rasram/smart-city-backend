@@ -12,6 +12,7 @@ import tensorflow as tf
 """ from PipelineCrack.engine import get_crack_result
 from PipelineCrack.signal1 import * """
 from Biomedical_Imaging.Nutribot.engine import *
+from Biomedical_Imaging.food_correction import correct_food_name
 import math
 import asyncio
 EPSILON = 1e-6
@@ -111,6 +112,11 @@ async def nutribot_chat(request: Request):
         raise HTTPException(status_code=400, detail="Message is required.")
     response_text = get_nutribot_response(message)
     return JSONResponse({"response": response_text})
+
+@app.get("/correct_food")
+async def correct_food(query: str = Query(..., description="Query string for food correction")):
+    corrected_name = correct_food_name(query)
+    return JSONResponse({'Corrected Food Name': corrected_name})
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
