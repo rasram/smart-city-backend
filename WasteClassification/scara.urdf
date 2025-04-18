@@ -1,9 +1,31 @@
 <?xml version="1.0" ?>
 <robot name="scara">
-  <link name="base" />  
+
+  <link name="world"/> <!-- Add world link -->
+
+  <joint name="base_x_slider" type="prismatic"> <!-- Add prismatic joint for base -->
+    <parent link="world"/>
+    <child link="base"/>
+    <origin xyz="0 0 0" rpy="0 0 0"/> <!-- Initial offset from world origin -->
+    <axis xyz="1 0 0"/> <!-- Allow movement along X axis -->
+    <limit lower="-1.0" upper="4.0" effort="100" velocity="0.5"/> <!-- Define movement limits -->
+  </joint>
+
+  <link name="base">
+     <!-- Add collision/inertial for base -->
+     <collision>
+       <geometry> <box size="0.1 0.1 0.02"/> </geometry> <!-- Example small base collision -->
+       <origin xyz="0 0 0.01" rpy="0 0 0"/>
+     </collision>
+     <inertial>
+       <mass value="1.0"/>
+       <origin xyz="0 0 0.01" rpy="0 0 0"/>
+       <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0" ixz="0" iyz="0"/>
+     </inertial>
+  </link>
 
   <joint name="joint1" type="revolute">
-    <parent link="base" />
+    <parent link="base" /> <!-- Parent is now the sliding base -->
     <child link="link1" />
     <origin xyz="0 0 0.3" rpy="0 0 0" />
     <axis xyz="0 0 1" />
@@ -16,7 +38,19 @@
         <box size="0.5 0.05 0.05" />
       </geometry>
       <origin xyz="0.25 0 0" rpy="0 0 0" />
+      <material name="grey"> <color rgba="0.5 0.5 0.5 1"/> </material>
     </visual>
+    <collision>
+      <geometry>
+        <box size="0.5 0.05 0.05" />
+      </geometry>
+      <origin xyz="0.25 0 0" rpy="0 0 0" />
+    </collision>
+    <inertial>
+      <mass value="0.5"/>
+      <origin xyz="0.25 0 0" rpy="0 0 0" />
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
   </link>
 
   <joint name="joint2" type="revolute">
@@ -33,7 +67,19 @@
         <box size="0.4 0.05 0.05" />
       </geometry>
       <origin xyz="0.2 0 0" rpy="0 0 0" />
+      <material name="grey"/>
     </visual>
+    <collision>
+      <geometry>
+        <box size="0.4 0.05 0.05" />
+      </geometry>
+      <origin xyz="0.2 0 0" rpy="0 0 0" />
+    </collision>
+    <inertial>
+      <mass value="0.4"/>
+      <origin xyz="0.2 0 0" rpy="0 0 0" />
+      <inertia ixx="0.001" iyy="0.001" izz="0.001" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
   </link>
 
   <joint name="joint3" type="prismatic">
@@ -50,6 +96,18 @@
         <cylinder length="0.1" radius="0.02" />
       </geometry>
       <origin xyz="0 0 0" rpy="0 0 0" />
+      <material name="grey"/>
     </visual>
+    <collision>
+      <geometry>
+        <cylinder length="0.1" radius="0.02" />
+      </geometry>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+    </collision>
+    <inertial>
+      <mass value="0.1"/>
+      <origin xyz="0 0 0" rpy="0 0 0" />
+      <inertia ixx="1e-5" iyy="1e-5" izz="1e-5" ixy="0" ixz="0" iyz="0"/>
+    </inertial>
   </link>
-  </robot>
+</robot>

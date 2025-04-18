@@ -63,67 +63,66 @@ def optimize_angles(initial_angles, target):
     result = minimize(cost_function, initial_angles, args=(target,), method='L-BFGS-B', bounds=[(-np.pi, np.pi), (-np.pi, np.pi)])
     return result.x
 
-# Get Target Input
-#x_target, y_target = map(float, input("Enter target (x, y) in meters: ").split())
-x_target = float(input("Enter x: "))
-y_target = float(input("Enter y: "))
-target = np.array([x_target, y_target])
+if __name__ == "__main__":
+    # Get Target Input
+    x_target = float(input("Enter x: "))
+    y_target = float(input("Enter y: "))
+    target = np.array([x_target, y_target])
 
-if not is_within_workspace(target):
-    print("Target is out of the workspace!")
-    exit()
+    if not is_within_workspace(target):
+        print("Target is out of the workspace!")
+        exit()
 
-# Solve Inverse Kinematics
-analytical_solution = analytical_ik(target)
-ga_solution = genetic_algorithm(target)
-optimized_angles = optimize_angles(ga_solution, target)
+    # Solve Inverse Kinematics
+    analytical_solution = analytical_ik(target)
+    ga_solution = genetic_algorithm(target)
+    optimized_angles = optimize_angles(ga_solution, target)
 
-print("\nIK Solutions:")
-print("Analytical:", analytical_solution)
-print("GA Solution:", ga_solution)
-print("GA + L-BFGS-B Optimized:", optimized_angles)
+    print("\nIK Solutions:")
+    print("Analytical:", analytical_solution)
+    print("GA Solution:", ga_solution)
+    print("GA + L-BFGS-B Optimized:", optimized_angles)
 
-# Choose which solution to visualize
-if analytical_solution is not None:
-    trajectory = np.linspace(analytical_solution, optimized_angles, num=50)
-else:
-    trajectory = np.linspace(ga_solution, optimized_angles, num=50)
+    # Choose which solution to visualize
+    if analytical_solution is not None:
+        trajectory = np.linspace(analytical_solution, optimized_angles, num=50)
+    else:
+        trajectory = np.linspace(ga_solution, optimized_angles, num=50)
 
-# Compute End-effector Path
-end_effector_trajectory = np.array([forward_kinematics(theta1, theta2) for theta1, theta2 in trajectory])
+    # Compute End-effector Path
+    end_effector_trajectory = np.array([forward_kinematics(theta1, theta2) for theta1, theta2 in trajectory])
 
-# Plot Setup
-fig, ax = plt.subplots()
-ax.set_xlim(-workspace_radius, workspace_radius)
-ax.set_ylim(-workspace_radius, workspace_radius)
-ax.set_xlabel("X-axis (meters)")
-ax.set_ylabel("Y-axis (meters)")
-ax.set_title("SCARA Robot Inverse Kinematics with Trajectory")
-ax.grid(True)
+    # Plot Setup
+    import matplotlib.pyplot as plt
+    import matplotlib.animation as animation
 
-# Plot Target
-ax.scatter([x_target], [y_target], color="red", marker="x", label="Target")
+    fig, ax = plt.subplots()
+    ax.set_xlim(-workspace_radius, workspace_radius)
+    ax.set_ylim(-workspace_radius, workspace_radius)
+    ax.set_xlabel("X-axis (meters)")
+    ax.set_ylabel("Y-axis (meters)")
+    ax.set_title("SCARA Robot Inverse Kinematics with Trajectory")
+    ax.grid(True)
 
-# Plot Full Trajectory
-ax.plot(end_effector_trajectory[:, 0], end_effector_trajectory[:, 1], 'g--', lw=1, label="Trajectory")
+    # Plot Target
+    ax.scatter([x_target], [y_target], color="red", marker="x", label="Target")
+    ax.plot(end_effector_trajectory[:, 0], end_effector_trajectory[:, 1], 'g--', lw=1, label="Trajectory")
 
-# Initialize Arms and Moving Dot
-arm1, = ax.plot([], [], 'ro-', lw=2)
-arm2, = ax.plot([], [], 'bo-', lw=2)
-end_effector_dot, = ax.plot([], [], 'go', markersize=5)
+    arm1, = ax.plot([], [], 'ro-', lw=2)
+    arm2, = ax.plot([], [], 'bo-', lw=2)
+    end_effector_dot, = ax.plot([], [], 'go', markersize=5)
 
-def update(frame):
-    theta1, theta2 = trajectory[frame]
-    x1, y1 = L1 * np.cos(theta1), L1 * np.sin(theta1)
-    x2, y2 = forward_kinematics(theta1, theta2)
-    
-    arm1.set_data([0, x1], [0, y1])
-    arm2.set_data([x1, x2], [y1, y2])
-    
-    end_effector_dot.set_data([x2], [y2])  # Move dot along trajectory
+    def update(frame):
+        theta1, theta2 = trajectory[frame]
+        x1, y1 = L1 * np.cos(theta1), L1 * np.sin(theta1)
+        x2, y2 = forward_kinematics(theta1, theta2)
 
-    return arm1, arm2, end_effector_dot
+        arm1.set_data([0, x1], [0, y1])
+        arm2.set_data([x1, x2], [y1, y2])
+        end_effector_dot.set_data([x2], [y2])
 
-ani = animation.FuncAnimation(fig, update, frames=len(trajectory), interval=100, blit=True)
-plt.legend()
-plt.show()
+        return arm1, arm2, end_effector_dot
+
+    ani = animation.FuncAnimation(fig, update, frames=len(trajectory), interval=100, blit=True)
+    plt.legend()
+    plt.show()

@@ -1,0 +1,118 @@
+<?xml version="1.0"?>
+<robot name="simple_linear_revolute_robot">
+
+  <!-- Base Link -->
+  <link name="base_link">
+    <visual>
+      <geometry>
+        <box size="0.4 0.4 0.1"/>
+      </geometry>
+      <origin xyz="0 0 0.05"/>
+      <material name="gray">
+        <color rgba="0.6 0.6 0.6 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Link that moves along x-axis (base movement) -->
+  <link name="base_slider_link">
+    <visual>
+      <geometry>
+        <box size="0.3 0.3 0.1"/>
+      </geometry>
+      <origin xyz="0 0 0.05"/>
+    </visual>
+  </link>
+
+  <!-- Prismatic joint for base -->
+  <joint name="base_slider_joint" type="prismatic">
+    <parent link="base_link"/>
+    <child link="base_slider_link"/>
+    <origin xyz="0 0 0"/>
+    <axis xyz="1 0 0"/>
+    <limit lower="0.0" upper="1.0" effort="100" velocity="0.5"/>
+  </joint>
+
+  <!-- Vertical Link -->
+  <link name="vertical_link">
+    <visual>
+      <geometry>
+        <cylinder length="0.5" radius="0.05"/>
+      </geometry>
+      <origin xyz="0 0 0.25"/>
+      <material name="blue">
+        <color rgba="0.2 0.2 1.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="fixed_vertical_joint" type="fixed">
+    <parent link="base_slider_link"/>
+    <child link="vertical_link"/>
+    <origin xyz="0 0 0.1"/>
+  </joint>
+
+  <!-- Horizontal Link -->
+  <link name="horizontal_link">
+    <visual>
+      <geometry>
+        <box size="0.4 0.05 0.05"/>
+      </geometry>
+      <origin xyz="0.2 0 0"/>
+      <material name="green">
+        <color rgba="0.2 1.0 0.2 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Revolute joint at top of vertical link -->
+  <joint name="shoulder_joint" type="revolute">
+    <parent link="vertical_link"/>
+    <child link="horizontal_link"/>
+    <origin xyz="0 0 0.5"/>
+    <axis xyz="0 0 1"/>
+    <limit lower="-1.57" upper="1.57" effort="30" velocity="1.0"/>
+  </joint>
+
+    <!-- Vertical Slider Link at end of horizontal link -->
+  <link name="slider_link">
+    <visual>
+      <geometry>
+        <box size="0.05 0.05 0.05"/>
+      </geometry>
+      <origin xyz="0 0 -0.025"/>
+      <material name="orange">
+        <color rgba="1.0 0.5 0.1 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <!-- Prismatic joint for vertical sliding -->
+  <joint name="slider_joint" type="prismatic">
+    <parent link="horizontal_link"/>
+    <child link="slider_link"/>
+    <origin xyz="0.4 0 0"/>
+    <axis xyz="0 0 -1"/>
+    <limit lower="0.0" upper="0.2" effort="10" velocity="0.5"/>
+  </joint>
+
+  <!-- Gripper (end effector) -->
+  <link name="gripper">
+    <visual>
+      <geometry>
+        <box size="0.1 0.05 0.05"/>
+      </geometry>
+      <origin xyz="0 0 -0.05"/>
+      <material name="red">
+        <color rgba="1.0 0.0 0.0 1.0"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="gripper_joint" type="fixed">
+    <parent link="slider_link"/>
+    <child link="gripper"/>
+    <origin xyz="0 0 -0.05"/>
+  </joint>
+
+</robot>
