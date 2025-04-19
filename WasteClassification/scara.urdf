@@ -22,6 +22,23 @@
        <origin xyz="0 0 0.01" rpy="0 0 0"/>
        <inertia ixx="0.01" iyy="0.01" izz="0.01" ixy="0" ixz="0" iyz="0"/>
      </inertial>
+     <!-- Visual for the base plate -->
+     <visual>
+       <geometry> <box size="0.1 0.1 0.02"/> </geometry>
+       <origin xyz="0 0 0.01" rpy="0 0 0"/>
+       <material name="dark_grey"> <color rgba="0.3 0.3 0.3 1"/> </material>
+     </visual>
+     <!-- Visual for the vertical riser (purely visual) -->
+     <visual>
+       <geometry>
+         <!-- Cylinder height goes from top of base plate (z=0.02) up to joint1 origin (z=0.3) -->
+         <cylinder length="0.28" radius="0.03" />
+       </geometry>
+       <!-- Position the center of the cylinder halfway up its length, starting from base plate top -->
+       <!-- Center Z = base_top_z + length/2 = 0.02 + 0.28/2 = 0.16 -->
+       <origin xyz="0 0 0.16" rpy="0 0 0" />
+       <material name="grey"> <color rgba="0.5 0.5 0.5 1"/> </material>
+     </visual>
   </link>
 
   <joint name="joint1" type="revolute">
@@ -38,7 +55,7 @@
         <box size="0.5 0.05 0.05" />
       </geometry>
       <origin xyz="0.25 0 0" rpy="0 0 0" />
-      <material name="grey"> <color rgba="0.5 0.5 0.5 1"/> </material>
+      <material name="grey"/> <!-- Removed redundant material definition -->
     </visual>
     <collision>
       <geometry>

@@ -19,11 +19,12 @@ plane_id = p.loadURDF("plane.urdf")
 # Define robot start position and orientation
 robot_start_pos = [-0.8, 0, 0.01]  # Positioned left of the first bins
 robot_start_orientation = p.getQuaternionFromEuler([0, 0, 0])
-# Define fixed checkpoints for the robot base X-coordinate (Reduced to 3)
-# Checkpoint 1: Start/Pickup area
-# Checkpoint 2: Middle area
-# Checkpoint 3: End area
-robot_base_checkpoints = [-0.8, 1.4, 3.2] 
+# Define fixed checkpoints for the robot base (y=0, x is average of bin x-coordinates)
+# Checkpoint 0: Start/Pickup area (x=-0.8, y=0)
+# Checkpoint 1: Average of bins 1-4 (x=0.8, y=0) [plastic, metal, paper, glass]
+# Checkpoint 2: Average of bins 5-8 (x=2.0, y=0) [organic, electronics, textile, ewaste]
+# Checkpoint 3: Average of bins 9-12 (x=3.2, y=0) [battery, rubber, medicine, mixed]
+robot_base_checkpoints = [-0.8, 0.8, 2.0, 3.2]  # x-coordinates only (y=0 is handled in movement)
 # Ensure the URDF file path is correct
 script_dir = os.path.dirname(__file__)
 urdf_path = os.path.join(script_dir, "scara.urdf")
@@ -139,6 +140,10 @@ active_constraint = None  # To hold the grasp constraint ID
 home_joint_angles = [0, 0, 0]  # Joint1, Joint2, Joint3(prismatic) - Ensure this is a safe retracted position
 num_scara_joints = 3  # Typically 3 main joints for positioning
 
+# Limits from URDF for joint3 (prismatic)
+joint3_lower_limit = -0.2
+joint3_upper_limit = 0.2
+
 # --- Robot Control Functions ---
 
 
@@ -197,6 +202,64 @@ def move_scara_ik(target_world_position, speed_fraction=0.5):
     wait_for_movement(target_joint_angles, joint_indices)
 
 
+def move_scara_joint_linear(target_angles, linear_joint_index, speed=0.1):
+    """Moves a single specified joint linearly to its target angle while keeping others fixed."""
+    control_joint_indices = list(range(num_scara_joints))  # Indices [0, 1, 2]
+
+    if linear_joint_index >= num_scara_joints:
+        print(f"Error: linear_joint_index {linear_joint_index} out of range.")
+        return
+    if len(target_angles) != num_scara_joints:
+        print(f"Error: target_angles length mismatch.")
+        return
+
+    # Get current joint angles
+    current_joint_states = p.getJointStates(robot_id, control_joint_indices)
+    current_joint_angles = [state[0] for state in current_joint_states]
+
+    # Calculate difference for the linear joint
+    delta_angle = target_angles[linear_joint_index] - current_joint_angles[linear_joint_index]
+    if abs(delta_angle) < 1e-6:  # Already there
+        return
+
+    # Calculate steps based on speed and simulation time step
+    time_step = 1. / 240.
+    duration = abs(delta_angle) / speed
+    steps = max(1, int(duration / time_step))
+
+    print(f"Linear joint move: Joint={linear_joint_index}, Delta={delta_angle:.3f}, Steps={steps}, Speed={speed:.2f}")
+
+    # Keep other joints fixed at their target angles (from the input target_angles)
+    intermediate_target = list(current_joint_angles)  # Start from current
+    # Set non-linear joints to their final target immediately
+    for i in range(num_scara_joints):
+        if i != linear_joint_index:
+            intermediate_target[i] = target_angles[i]
+
+    for i in range(1, steps + 1):
+        fraction = i / steps
+        # Interpolate only the linear joint
+        intermediate_target[linear_joint_index] = current_joint_angles[linear_joint_index] + delta_angle * fraction
+
+        p.setJointMotorControlArray(
+            bodyUniqueId=robot_id,
+            jointIndices=control_joint_indices,
+            controlMode=p.POSITION_CONTROL,
+            targetPositions=intermediate_target,
+        )
+        p.stepSimulation()
+        time.sleep(time_step)
+
+    # Final command to ensure target is reached
+    p.setJointMotorControlArray(
+        bodyUniqueId=robot_id,
+        jointIndices=control_joint_indices,
+        controlMode=p.POSITION_CONTROL,
+        targetPositions=target_angles,
+    )
+    wait_for_movement(target_angles, control_joint_indices, tolerance=0.015)  # Wait for final settling
+
+
 def attach_object(obj_id):
     global active_constraint
     if active_constraint is not None:
@@ -220,57 +283,69 @@ def release_object():
         print("Object released.")
 
 
-def move_robot_base_to(target_x, base_speed=1.0, tolerance=0.01, max_wait_steps=240 * 10):
-    """Moves the robot base along the X axis to a specific checkpoint using velocity."""
-    print(f"Attempting to move robot base to checkpoint x = {target_x:.2f}")
-    steps = 0
-    while steps < max_wait_steps:
+def move_robot_base_to_checkpoint(checkpoint_x, base_speed=0.5, tolerance=0.01):
+    """Moves the robot base to a checkpoint at constant velocity."""
+    print(f"Moving robot base to checkpoint x = {checkpoint_x:.2f}")
+    while True:
         current_pos, base_orn = p.getBasePositionAndOrientation(robot_id)
         current_x = current_pos[0]
-        
-        if abs(target_x - current_x) < tolerance:
-            # Already at the target, ensure velocity is zero and break
+        dx = checkpoint_x - current_x
+        if abs(dx) < tolerance:
+            # Snap to checkpoint and stop
             p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
-            print(f"Robot base reached checkpoint x = {target_x:.2f}")
-            return True
-
-        direction = 1.0 if target_x > current_x else -1.0
-        move_velocity = direction * base_speed
-
-        # Apply velocity
-        p.resetBaseVelocity(robot_id, linearVelocity=[move_velocity, 0, 0], angularVelocity=[0, 0, 0])
-
-        # Step simulation
-        p.stepSimulation()
-        time.sleep(1./240.) # Maintain simulation rate consistency
-        
-        # Check if we passed the target in this step
-        next_pos, _ = p.getBasePositionAndOrientation(robot_id)
-        next_x = next_pos[0]
-        
-        # If moving right and passed target OR moving left and passed target
-        if (direction > 0 and next_x >= target_x) or (direction < 0 and next_x <= target_x):
-            # Stop and place precisely at the target checkpoint
-            p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0])
-            p.resetBasePositionAndOrientation(robot_id, [target_x, current_pos[1], current_pos[2]], base_orn) # Final precise placement
-            print(f"Robot base arrived and stopped at checkpoint x = {target_x:.2f}")
+            p.resetBasePositionAndOrientation(robot_id, [checkpoint_x, current_pos[1], current_pos[2]], base_orn)
             for _ in range(10):
-                 p.stepSimulation()
-                 time.sleep(1./240.)
-            return True
-            
-        steps += 1
+                p.stepSimulation()
+                time.sleep(1./240.)
+            print(f"Robot base arrived at checkpoint x = {checkpoint_x:.2f}")
+            break
+        direction = 1.0 if dx > 0 else -1.0
+        move_velocity = direction * base_speed
+        p.resetBaseVelocity(robot_id, linearVelocity=[move_velocity, 0, 0], angularVelocity=[0, 0, 0])
+        p.stepSimulation()
+        time.sleep(1./240.)
 
-    # Timeout
-    print(f"Warning: Robot base movement to {target_x:.2f} timed out after {max_wait_steps} steps.")
-    p.resetBaseVelocity(robot_id, linearVelocity=[0, 0, 0], angularVelocity=[0, 0, 0]) # Stop on timeout
-    return False
+
+def move_scara_ik_linear(target_world_position, speed=0.2, step_size=0.01):
+    """Moves the robot's end effector to a target world position in a straight line at constant speed."""
+    # Get current end effector position
+    link_state = p.getLinkState(robot_id, end_effector_link_index)
+    current_pos = list(link_state[0])
+    target_pos = list(target_world_position)
+    distance = ((target_pos[0] - current_pos[0])**2 + (target_pos[1] - current_pos[1])**2 + (target_pos[2] - current_pos[2])**2) ** 0.5
+    steps = max(1, int(distance / step_size))
+    for i in range(1, steps + 1):
+        interp = [current_pos[j] + (target_pos[j] - current_pos[j]) * i / steps for j in range(3)]
+        joint_angles_raw = p.calculateInverseKinematics(
+            bodyUniqueId=robot_id,
+            endEffectorLinkIndex=end_effector_link_index,
+            targetPosition=interp,
+        )
+        target_joint_angles = list(joint_angles_raw[:num_scara_joints])
+        joint_indices = list(range(num_scara_joints))
+        p.setJointMotorControlArray(
+            bodyUniqueId=robot_id,
+            jointIndices=joint_indices,
+            controlMode=p.POSITION_CONTROL,
+            targetPositions=target_joint_angles,
+        )
+        p.stepSimulation()
+        time.sleep(step_size / speed)
 
 
-def get_closest_checkpoint(target_x):
-    """Finds the checkpoint X-coordinate closest to the target_x."""
-    closest_checkpoint = min(robot_base_checkpoints, key=lambda cp: abs(cp - target_x))
-    return closest_checkpoint
+def get_checkpoint_for_bin(bin_type):
+    """Returns the checkpoint x for a given bin, with one checkpoint positioned equidistant from the boxes it serves."""
+    # Group bins into sets of four, each mapped to a checkpoint index:
+    # Checkpoint 1 (index 1): plastic, metal, paper, glass (avg x = 0.8)
+    # Checkpoint 2 (index 2): organic, electronics, textile, ewaste (avg x = 2.0)
+    # Checkpoint 3 (index 3): battery, rubber, medicine, mixed (avg x = 3.2)
+    bin_to_checkpoint = {
+        "plastic": 1, "metal": 1, "paper": 1, "glass": 1,
+        "organic": 2, "electronics": 2, "textile": 2, "ewaste": 2,
+        "battery": 3, "rubber": 3, "medicine": 3, "mixed": 3,
+    }
+    idx = bin_to_checkpoint.get(bin_type, 1)  # Default to first bin checkpoint if unknown
+    return robot_base_checkpoints[idx]
 
 
 def check_object_placement(obj_id, bin_type):
@@ -352,7 +427,7 @@ def process_object():
     obj_id = current_object["id"]
     bin_type = current_object["bin"]
     target_bin_pos = bins[bin_type]
-    target_bin_x = target_bin_pos[0] # Get bin's X coordinate
+    target_bin_x = target_bin_pos[0]
 
     print(f"Processing object for {bin_type} bin at x={target_bin_x:.2f}...")
 
@@ -361,81 +436,93 @@ def process_object():
     pickup_hover_z = obj_pos[2] + 0.20
     pickup_grasp_z = obj_pos[2] + 0.03
 
-    # Ensure base is at the starting checkpoint for pickup
-    # Use get_closest_checkpoint for pickup as before
-    pickup_checkpoint_x = get_closest_checkpoint(pickup_zone_x)
+    # Always move base to checkpoint 0 for pickup
+    pickup_checkpoint_x = robot_base_checkpoints[0]
     print(f"Moving robot base to pickup checkpoint {pickup_checkpoint_x:.2f}")
-    if not move_robot_base_to(pickup_checkpoint_x):
-         print("Error: Failed to move base to pickup checkpoint. Skipping object.")
-         # No object held yet, just reset state
-         current_object = None
-         object_state = "GENERATING"
-         return
+    move_robot_base_to_checkpoint(pickup_checkpoint_x)
 
     print("Moving to pickup hover position...")
-    move_scara_ik([pickup_zone_x, obj_pos[1], pickup_hover_z])
+    move_scara_ik_linear([pickup_zone_x, obj_pos[1], pickup_hover_z])
     print("Moving to grasp position...")
-    move_scara_ik([pickup_zone_x, obj_pos[1], pickup_grasp_z])
+    move_scara_ik_linear([pickup_zone_x, obj_pos[1], pickup_grasp_z])
 
     print("Pausing before grasp...")
-    time.sleep(0.5) # Pause before grasping
+    time.sleep(0.5)
 
     attach_object(obj_id)
     print("Moving up after grasp...")
-    move_scara_ik([pickup_zone_x, obj_pos[1], pickup_hover_z])
+    move_scara_ik_linear([pickup_zone_x, obj_pos[1], pickup_hover_z])
 
     # --- Placement Sequence ---
-    # Determine the placement checkpoint based on bin X-coordinate
-    # Goal: Stop base further away, use arm reach more.
-    if target_bin_x <= 1.1: # Bins at 0.5, 1.1
-        placement_checkpoint_x = robot_base_checkpoints[0] # Use -0.8 (start checkpoint)
-    elif target_bin_x <= 3.5: # Bins at 1.7, 2.3, 2.9, 3.5
-        placement_checkpoint_x = robot_base_checkpoints[1] # Use 1.4 (middle checkpoint)
-    else: # Fallback, should not be reached with current bin layout
-        print(f"Warning: Bin X ({target_bin_x}) outside expected range, using middle checkpoint.")
-        placement_checkpoint_x = robot_base_checkpoints[1]
-
-    print(f"Selected placement checkpoint {placement_checkpoint_x:.2f} for bin {bin_type} at x={target_bin_x:.2f}")
-
+    placement_checkpoint_x = get_checkpoint_for_bin(bin_type)
     print(f"Moving robot base to placement checkpoint {placement_checkpoint_x:.2f}")
-    if not move_robot_base_to(placement_checkpoint_x): # Check if movement succeeded
-         print("Error: Failed to move base to placement checkpoint. Releasing object and skipping.")
-         # Release the object before skipping
-         release_object()
-         # Optionally move arm up/home before skipping
-         print("Moving arm up before skipping...")
-         move_scara_ik([pickup_zone_x, obj_pos[1], pickup_hover_z]) # Move arm back up slightly relative to pickup pos
-         print("Returning arm to home joints before skipping...")
-         move_scara_joints(home_joint_angles) # Move arm home
-         print("Returning base to home checkpoint before skipping...")
-         move_robot_base_to(robot_base_checkpoints[0]) # Attempt to return base home
+    move_robot_base_to_checkpoint(placement_checkpoint_x)
 
-         current_object = None
-         object_state = "GENERATING"
-         return
-
-    # Define placement heights relative to bin top
     bin_top_z = target_bin_pos[2] + bin_half_extents[2]
     place_hover_z = bin_top_z + 0.20
-    place_down_z = bin_top_z + 0.05
+    place_down_z = bin_top_z + 0.01  # Place closer to bin bottom (was 0.05)
 
-    # Target world positions for IK (using the actual bin coordinates)
+    # Define placement position and orientation - ensure directly above bin center
     target_place_hover_world = [target_bin_pos[0], target_bin_pos[1], place_hover_z]
-    target_place_down_world = [target_bin_pos[0], target_bin_pos[1], place_down_z]
+    
+    print(f"Bin center position: {target_bin_pos}")
+    print(f"Target hover position: {target_place_hover_world}")
 
-    print("Moving to placement hover position...")
-    move_scara_ik(target_place_hover_world)
+    # Use a slower speed (0.2) for more precise positioning
+    print("Moving to placement hover position (linear)...")
+    move_scara_ik_linear(target_place_hover_world, speed=0.2)
 
-    print("Moving down to place...")
-    move_scara_ik(target_place_down_world)
+    # Double pause at hover to ensure stability
+    print("Pausing at hover position to stabilize...")
+    time.sleep(1.0)  # Longer pause to ensure stability
 
+    # --- Vertical Placement using Linear Joint Control ---
+    print("Moving down to place (vertical only)...")
+    # Get the ACTUAL joint angles after the hover move and pause
+    current_joint_states_actual_hover = p.getJointStates(robot_id, list(range(num_scara_joints)))
+    j1_actual_hover, j2_actual_hover, j3_actual_hover = [state[0] for state in current_joint_states_actual_hover]
+
+    # Get the world position corresponding to the actual hover joint state
+    link_state_actual_hover = p.getLinkState(robot_id, end_effector_link_index)
+    current_world_pos_actual_hover = link_state_actual_hover[0]
+    current_world_z_actual_hover = current_world_pos_actual_hover[2]
+    
+    print(f"Actual hover position: {current_world_pos_actual_hover}")
+
+    # Calculate delta Z needed to reach the 'down' position from the actual hover Z
+    delta_z_down = place_down_z - current_world_z_actual_hover
+
+    # Calculate target prismatic joint value based on actual hover angle
+    j3_target_down = j3_actual_hover + delta_z_down
+    j3_target_down = max(joint3_lower_limit, min(joint3_upper_limit, j3_target_down))
+
+    # Target angles keeping J1 and J2 fixed at their ACTUAL hover values
+    target_angles_down = [j1_actual_hover, j2_actual_hover, j3_target_down]
+    # Use the linear joint move function for the prismatic joint (index 2) with slower speed
+    move_scara_joint_linear(target_angles_down, linear_joint_index=2, speed=0.05)  # Much slower for precise placement
+    
     print("Pausing before release...")
-    time.sleep(0.5) # Pause before releasing
+    time.sleep(0.5)
 
     release_object()
 
-    print("Moving up after release...")
-    move_scara_ik(target_place_hover_world)
+    # --- Vertical Retract using Linear Joint Control ---
+    print("Moving up after release (vertical only)...")
+    # Calculate delta Z needed to go back up to the desired hover height
+    delta_z_up = place_hover_z - place_down_z # Desired total vertical distance
+
+    # Get current prismatic joint position after downward move and release
+    current_joint_states_after_down = p.getJointStates(robot_id, list(range(num_scara_joints)))
+    j3_current = current_joint_states_after_down[2][0]
+
+    # Calculate target prismatic joint value relative to current position
+    j3_target_up = j3_current + delta_z_up
+    j3_target_up = max(joint3_lower_limit, min(joint3_upper_limit, j3_target_up))
+
+    # Target angles keeping J1 and J2 fixed at their ACTUAL hover values
+    target_angles_up = [j1_actual_hover, j2_actual_hover, j3_target_up]
+    # Use the linear joint move function for the prismatic joint (index 2)
+    move_scara_joint_linear(target_angles_up, linear_joint_index=2, speed=0.1) # Adjust speed as needed
 
     # --- Return to Home ---
     print("Returning arm to home joint angles...")
@@ -443,29 +530,22 @@ def process_object():
 
     print("Returning robot base to start checkpoint...")
     home_checkpoint_x = robot_base_checkpoints[0]
-    if not move_robot_base_to(home_checkpoint_x): # Check if movement succeeded
-        print("Error: Failed to return base to home checkpoint.")
+    move_robot_base_to_checkpoint(home_checkpoint_x)
 
-    # Wait for object settling
     print("Waiting for object to settle...")
-    for _ in range(120): # Simulate for ~0.5 seconds
+    for _ in range(120):
         p.stepSimulation()
-        # time.sleep(1./240.) # Optional sleep if needed for visual debugging
 
-    # Check placement
     if check_object_placement(obj_id, bin_type):
         objects_processed += 1
     else:
         objects_removed += 1
         print(f"Removing missed object {obj_id}")
-        # Check if body exists before removing, as physics might have already removed it
         try:
-            p.getBodyInfo(obj_id) # Check if ID is valid
+            p.getBodyInfo(obj_id)
             p.removeBody(obj_id)
         except p.error as e:
-            # If getBodyInfo fails, the body likely doesn't exist anymore
             print(f"Could not remove body {obj_id}, likely already removed or invalid: {e}")
-
 
     current_object = None
     object_state = "GENERATING"
@@ -477,7 +557,7 @@ last_time = time.time()
 
 print("Moving robot to initial home position...")
 move_scara_joints(home_joint_angles, speed_fraction=1.0)
-move_robot_base_to(robot_base_checkpoints[0])
+move_robot_base_to_checkpoint(robot_base_checkpoints[0])
 time.sleep(0.5)
 
 p.resetDebugVisualizerCamera(cameraDistance=4, cameraYaw=45, cameraPitch=-30, cameraTargetPosition=[1.5, 0, 0])
